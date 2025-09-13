@@ -1,0 +1,193 @@
+# 套利机器人配置文件模板
+# 🔒 安全提示：API密钥请配置在secrets.json中，不要放在配置文件里
+app:
+  base_currency: USDT
+  initial_budget_usdt: 5.0
+  min_profit_usdt: 0.1
+  min_spread_bps: 50  # 最小价差50基点(0.5%)
+  max_slippage_bps: 30  # 最大滑点30基点(0.3%)
+  cool_down_sec: 5
+  mode: live  # live/test
+  symbols:
+    - XLM/USDT
+    - DOGE/USDT
+
+# API密钥配置已移至secrets.json文件
+# 请创建secrets.json文件，格式如下:
+# {
+#   "mexc": {
+#     "api_key": "your_mexc_api_key_here",
+#     "secret_key": "your_mexc_secret_key_here"
+#   },
+#   "gate": {
+#     "api_key": "your_gate_api_key_here",
+#     "secret_key": "your_gate_secret_key_here"
+#   }
+# }
+
+# 交易所配置  
+exchanges:
+  mexc:
+    base_url: "https://api.mexc.com"
+    ws_url: "wss://wbs.mexc.com/ws"
+    fee_bps:
+      maker: 20
+      taker: 20
+    recv_window_ms: 5000
+    # 连接池配置
+    max_connections: 10
+    connection_timeout: 30
+    
+  gate:
+    base_url: "https://api.gateio.ws/api/v4"
+    ws_url: "wss://api.gateio.ws/ws/v4/"
+    proxy: ""  # 代理设置，如需要请填写
+    fee_bps:
+      maker: 20
+      taker: 20
+    recv_window_ms: 5000
+    max_connections: 10
+    connection_timeout: 30
+
+# 🛡️ 安全和风控配置
+security:
+  # 资金安全
+  max_single_trade_usdt: 100    # 🔒 单笔最大交易额限制
+  max_daily_loss_usdt: 50       # 🔒 每日最大损失限制
+  max_total_risk_pct: 10        # 🔒 最大风险敞口百分比
+  
+  # 价格安全
+  max_price_deviation_pct: 5    # 🔒 最大价格偏差百分比
+  price_staleness_sec: 30       # 🔒 价格数据过期时间
+  min_liquidity_usdt: 1000      # 🔒 最小流动性要求
+  
+  # 操作安全
+  confirmation_required: true    # 🔒 高风险操作需要确认
+  emergency_stop_enabled: true   # 🔒 紧急停止开关
+  max_concurrent_trades: 1       # 🔒 最大并发交易数
+  
+# 风控配置
+risk:
+  max_latency_ms: 3000
+  max_open_orders_per_side: 1
+  max_open_pairs: 1
+  pnl_floor_usdt: -50           # 🔒 最大亏损限制
+  stop_on_error: true
+  max_spread_pct: 2.0           # 最大价格滑点百分比
+  
+  # MEV保护
+  mev_protection:
+    enabled: true
+    random_delay_ms: [100, 500] # 随机延迟范围
+    jitter_enabled: true        # 交易时机抖动
+
+# 转账配置
+transfers:
+  enable: true
+  max_pending_minutes: 30
+  stablecoin: USDT
+  usdt_chain_priority:
+    - BSC      # 优先使用BSC链（手续费低）
+    - TRX      # 备选TRX链
+  withdraw_cooldown_sec: 300
+  
+  # 🔒 地址安全验证
+  address_verification:
+    enabled: true
+    whitelist_only: false       # 是否只允许白名单地址
+    checksum_validation: true   # 地址校验和验证
+  
+# 日志配置
+logging:
+  level: INFO                   # 生产环境建议INFO或WARNING
+  path: logs/
+  trade_log: trade_history.log
+  fund_log: fund_flow.log
+  error_log: error.log
+  
+  # 🔒 敏感信息过滤
+  mask_sensitive: true          # 屏蔽日志中的敏感信息
+  max_log_size_mb: 100         # 单个日志文件最大大小
+  log_retention_days: 30       # 日志保留天数
+  
+# 监控和报警配置
+monitoring:
+  enabled: true
+  health_check_interval: 60    # 健康检查间隔(秒)
+  
+  # 性能监控
+  metrics:
+    enabled: true
+    export_interval: 300       # 指标导出间隔
+    
+  # 报警阈值
+  alerts:
+    high_latency_ms: 5000     # 高延迟报警
+    low_balance_pct: 10       # 低余额报警
+    failed_trades_count: 3    # 连续失败交易报警
+    
+# 通知配置
+notify:
+  telegram:
+    enable: false
+    bot_token: ""
+    chat_id: ""
+    
+  email:
+    enable: false
+    smtp_server: ""
+    smtp_port: 587
+    username: ""
+    password: ""
+    recipients: []
+
+# 套利配置
+arbitrage:
+  monitor_interval_sec: 1       # 价差监控间隔
+  trade_check_interval_sec: 5   # 交易状态检查间隔  
+  min_arbitrage_amount_usdt: 10 # 🔒 最小套利金额（安全起见设为10）
+  max_arbitrage_amount_usdt: 100 # 🔒 最大套利金额（限制风险）
+  
+  # 🔒 兼容性检查
+  compatibility_check:
+    enabled: true              # 启用兼容性检查
+    strict_mode: true         # 严格模式，不兼容币种直接拒绝
+    cache_duration: 3600      # 检查结果缓存时间（秒）
+    
+  # 执行策略
+  execution:
+    pre_trade_validation: true # 交易前验证
+    post_trade_verification: true # 交易后验证
+    retry_attempts: 3         # 失败重试次数
+    retry_delay_sec: 5        # 重试间隔
+
+# 充提地址配置 (可选 - 系统会自动通过API获取)
+# ⚠️ 生产环境建议预配置白名单地址
+addresses:
+  gate:
+    USDT:
+      BSC: ""  # 可选：预配置Gate USDT BSC地址
+      TRX: ""  # 可选：预配置Gate USDT TRX地址
+    DOGE:
+      DOGE: ""  # 可选：预配置Gate DOGE地址
+  
+  mexc:
+    USDT:
+      BSC: ""  # 可选：预配置MEXC USDT BSC地址
+      TRX: ""  # 可选：预配置MEXC USDT TRX地址
+    DOGE:
+      DOGE: ""  # 可选：预配置MEXC DOGE地址
+
+# 🔒 开发和测试配置
+development:
+  debug_mode: false           # 调试模式
+  mock_trades: false          # 模拟交易模式
+  test_api_endpoints: false   # 使用测试API端点
+  log_api_requests: false     # 记录API请求（调试用）
+  
+# 🔒 合规和审计配置  
+compliance:
+  trade_recording: true       # 记录所有交易
+  audit_trail: true          # 审计日志
+  data_retention_days: 90    # 数据保留期
+  export_format: "json"      # 数据导出格式
